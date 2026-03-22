@@ -21,6 +21,7 @@ COPY --from=builder /install /usr/local
 
 # Copy only necessary source files
 COPY app.py .
+COPY .flake8 .
 
 # Switch to non-root user
 USER appuser
