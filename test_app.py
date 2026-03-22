@@ -20,6 +20,33 @@ def client():
         yield client
 
 
+# ---------- PROGRAMS ----------
+
+def test_get_programs(client):
+    response = client.get("/programs")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) == 3
+    codes = [p["code"] for p in data]
+    assert "FL" in codes
+    assert "MG" in codes
+    assert "BG" in codes
+
+
+def test_get_program_by_code(client):
+    response = client.get("/programs/FL")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["code"] == "FL"
+    assert "workout" in data
+    assert "diet" in data
+
+
+def test_get_program_not_found(client):
+    response = client.get("/programs/XX")
+    assert response.status_code == 404
+
+
 # ---------- HEALTH ----------
 
 def test_health_check(client):

@@ -8,6 +8,28 @@ classes = {}
 _member_id_counter = 1
 _class_id_counter = 1
 
+# ---------- PROGRAM DATA (from ACEest baseline scripts) ----------
+PROGRAMS = {
+    "Fat Loss (FL)": {
+        "code": "FL",
+        "workout": "Mon: 5x5 Back Squat + AMRAP | Tue: EMOM 20min Assault Bike | Wed: Bench Press + 21-15-9 | Thu: 10RFT Deadlifts/Box Jumps | Fri: 30min Active Recovery",
+        "diet": "Breakfast: 3 Egg Whites + Oats Idli | Lunch: Grilled Chicken + Brown Rice | Dinner: Fish Curry + Millet Roti | Target: 2,000 kcal",
+        "color": "#e74c3c"
+    },
+    "Muscle Gain (MG)": {
+        "code": "MG",
+        "workout": "Mon: Squat 5x5 | Tue: Bench 5x5 | Wed: Deadlift 4x6 | Thu: Front Squat 4x8 | Fri: Incline Press 4x10 | Sat: Barbell Rows 4x10",
+        "diet": "Breakfast: 4 Eggs + PB Oats | Lunch: Chicken Biryani (250g Chicken) | Dinner: Mutton Curry + Jeera Rice | Target: 3,200 kcal",
+        "color": "#2ecc71"
+    },
+    "Beginner (BG)": {
+        "code": "BG",
+        "workout": "Circuit Training: Air Squats, Ring Rows, Push-ups | Focus: Technique Mastery & Form (90% Threshold)",
+        "diet": "Balanced Meals: Idli-Sambar, Rice-Dal, Chapati | Protein: 120g/day",
+        "color": "#3498db"
+    }
+}
+
 
 # ---------- HOME UI ----------
 
@@ -62,6 +84,9 @@ HOME_HTML = """
     <h1>Welcome to ACEest Gym</h1>
     <p>Manage members, classes, and keep your gym running at peak performance.</p>
   </div>
+
+  <!-- Programs -->
+  <div class="row g-4 mb-4" id="programsRow"></div>
 
   <!-- Stats -->
   <div class="row g-4 mb-4" id="stats">
@@ -228,6 +253,21 @@ HOME_HTML = """
     }
   }
 
+  async function loadPrograms() {
+    const res = await fetch('/programs');
+    const data = await res.json();
+    const el = document.getElementById('programsRow');
+    el.innerHTML = data.map(p => `
+      <div class="col-md-4">
+        <div class="section-card h-100" style="border-left: 4px solid ${p.color}">
+          <h5 style="color:${p.color}"><i class="bi bi-trophy-fill me-2"></i>${p.code} Program</h5>
+          <p class="small text-muted mb-2"><strong style="color:#aaa">Workout:</strong><br>${p.workout.replace(/\|/g,'<br>')}</p>
+          <p class="small text-muted mb-0"><strong style="color:#aaa">Diet:</strong><br>${p.diet.replace(/\|/g,'<br>')}</p>
+        </div>
+      </div>`).join('');
+  }
+
+  loadPrograms();
   loadMembers();
   loadClasses();
 </script>
@@ -312,6 +352,21 @@ def add_class():
     classes[_class_id_counter] = gym_class
     _class_id_counter += 1
     return jsonify(gym_class), 201
+
+
+# ---------- PROGRAMS ----------
+
+@app.route("/programs", methods=["GET"])
+def get_programs():
+    return jsonify(list(PROGRAMS.values())), 200
+
+
+@app.route("/programs/<code>", methods=["GET"])
+def get_program(code):
+    for prog in PROGRAMS.values():
+        if prog["code"] == code.upper():
+            return jsonify(prog), 200
+    abort(404)
 
 
 # ---------- HEALTH ----------
