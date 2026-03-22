@@ -263,8 +263,8 @@ HOME_HTML = """
       <div class="col-md-4">
         <div class="section-card h-100" style="border-left: 4px solid ${p.color}">
           <h5 style="color:${p.color}"><i class="bi bi-trophy-fill me-2"></i>${p.code} Program</h5>
-          <p class="small text-light mb-2"><strong style="color:#ddd">Workout:</strong><br>${p.workout.replace(/\|/g,'<br>')}</p>
-          <p class="small text-light mb-0"><strong style="color:#ddd">Diet:</strong><br>${p.diet.replace(/\|/g,'<br>')}</p>
+          <p class="small text-light mb-2"><strong style="color:#ddd">Workout:</strong><br>${p.workout.split('|').join('<br>')}</p>
+          <p class="small text-light mb-0"><strong style="color:#ddd">Diet:</strong><br>${p.diet.split('|').join('<br>')}</p>
         </div>
       </div>`).join('');
   }
