@@ -19,11 +19,12 @@ A Flask-based gym management REST API with a fully automated CI/CD pipeline usin
 
 ```
 acefitness/
-├── app.py                        # Flask application
+├── app.py                        # Flask application (API + Home UI)
 ├── requirements.txt              # Python dependencies
-├── test_app.py                   # Pytest test suite
+├── test_app.py                   # Pytest test suite (25 tests)
 ├── Dockerfile                    # Production Docker image (multi-stage, non-root)
 ├── Dockerfile.test               # Test Docker image (includes test files)
+├── .flake8                       # Flake8 linting configuration
 ├── .dockerignore                 # Files excluded from Docker build context
 ├── Jenkinsfile                   # Jenkins declarative pipeline
 ├── .github/
@@ -44,8 +45,8 @@ acefitness/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-username>/acefitness-devops.git
-cd acefitness-devops
+git clone https://github.com/rrprabhakar2003/fitness-gym.git
+cd fitness-gym
 
 # 2. Create and activate a virtual environment
 python3 -m venv venv
@@ -58,7 +59,15 @@ pip install -r requirements.txt
 python app.py
 ```
 
-The API will be available at `http://localhost:5000`.
+The app will be available at `http://localhost:5000`.
+Open your browser to see the **Home UI dashboard**.
+
+### Run with Docker (recommended)
+
+```bash
+docker build -t acefitness:latest .
+docker run -p 5000:5000 acefitness:latest
+```
 
 ---
 
@@ -100,7 +109,7 @@ docker build -t acefitness:latest .
 docker run -p 5000:5000 acefitness:latest
 ```
 
-The API will be available at `http://localhost:5000`.
+The app will be available at `http://localhost:5000`.
 
 ---
 
@@ -145,26 +154,35 @@ Jenkins handles the **BUILD** phase as a secondary quality gate, pulling the lat
 
 ### Setup Instructions
 
-1. **Install Jenkins** (local or Docker):
+1. **Install Jenkins** via Docker:
    ```bash
-   docker run -p 8080:8080 -p 50000:50000 \
+   docker run -d -p 8080:8080 -p 50000:50000 \
      -v jenkins_home:/var/jenkins_home \
+     -v /var/run/docker.sock:/var/run/docker.sock \
      jenkins/jenkins:lts
    ```
 
-2. **Install required plugins** in Jenkins:
-   - Git Plugin
-   - Pipeline Plugin
-   - Docker Pipeline Plugin
+2. **Install Docker CLI inside Jenkins container** (required for Docker builds):
+   ```bash
+   docker exec -u root jenkins bash -c "
+     apt-get update -qq &&
+     apt-get install -y ca-certificates curl gnupg &&
+     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg &&
+     echo 'deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable' > /etc/apt/sources.list.d/docker.list &&
+     apt-get update -qq && apt-get install -y docker-ce-cli
+   "
+   docker exec -u root jenkins chmod 666 /var/run/docker.sock
+   ```
 
 3. **Create a new Pipeline job**:
    - Dashboard → New Item → Pipeline
    - Under *Pipeline*, select **Pipeline script from SCM**
-   - SCM: Git → enter your GitHub repository URL
+   - SCM: Git → `https://github.com/rrprabhakar2003/fitness-gym.git`
+   - Branch: `*/main`
    - Script Path: `Jenkinsfile`
 
 4. **Trigger a build**:
-   - Click **Build Now**, or configure a GitHub webhook to trigger on push.
+   - Click **Build Now**
 
 ### Jenkins Pipeline Stages
 
@@ -181,6 +199,12 @@ Post-build, temporary Docker images are automatically cleaned up to conserve dis
 ---
 
 ## API Reference
+
+### Home UI
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Web dashboard (members, classes, programs) |
 
 ### Health
 
@@ -224,14 +248,25 @@ Post-build, temporary Docker images are automatically cleaned up to conserve dis
 }
 ```
 
+### Programs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/programs` | List all fitness programs (FL, MG, BG) |
+| GET | `/programs/<code>` | Get a specific program by code |
+
+**Program codes:** `FL` (Fat Loss), `MG` (Muscle Gain), `BG` (Beginner)
+
 ---
 
 ## Evaluation Checklist
 
 - [x] Flask application with modular endpoints
+- [x] Home UI dashboard for gym management
+- [x] Programs API based on ACEest baseline scripts (FL/MG/BG)
 - [x] Meaningful Git commits and branch management
-- [x] Pytest suite covering all core functionalities
+- [x] Pytest suite — 25 tests covering all core functionalities
 - [x] Multi-stage Dockerfile (optimized, non-root user)
 - [x] GitHub Actions workflow (Build → Docker → Test)
-- [x] Jenkins declarative pipeline (Checkout → Build → Lint → Test)
+- [x] Jenkins declarative pipeline (Checkout → Build → Lint → Test → Quality Gate)
 - [x] Professional README documentation
