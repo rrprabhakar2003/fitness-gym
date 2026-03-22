@@ -25,12 +25,7 @@ pipeline {
         stage('Lint') {
             steps {
                 echo "Running flake8 lint checks..."
-                sh """
-                    docker run --rm \\
-                        -v \$(pwd)/app.py:/app/app.py \\
-                        ${IMAGE_NAME}:${IMAGE_TAG} \\
-                        sh -c "pip install flake8 -q && flake8 app.py --max-line-length=100"
-                """
+                sh "docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} flake8 app.py --max-line-length=100"
             }
         }
 
