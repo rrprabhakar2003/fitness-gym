@@ -190,7 +190,7 @@ HOME_HTML = """
     el.innerHTML = `<table class="table table-sm"><thead><tr><th>Name</th><th>Email</th><th>Type</th><th></th></tr></thead><tbody>` +
       data.map(m => `<tr>
         <td><i class="bi bi-person-circle me-1 text-warning"></i>${m.name}</td>
-        <td class="text-muted small">${m.email}</td>
+        <td class="text-light small">${m.email}</td>
         <td><span class="badge ${badgeClass(m.membership_type)}">${m.membership_type}</span></td>
         <td><button class="btn btn-danger btn-sm py-0" onclick="deleteMember(${m.id})"><i class="bi bi-trash"></i></button></td>
       </tr>`).join('') + `</tbody></table>`;
@@ -205,8 +205,8 @@ HOME_HTML = """
     el.innerHTML = `<table class="table table-sm"><thead><tr><th>Class</th><th>Instructor</th><th>Schedule</th><th>Cap</th></tr></thead><tbody>` +
       data.map(c => `<tr>
         <td><i class="bi bi-activity me-1 text-danger"></i>${c.name}</td>
-        <td class="text-muted small">${c.instructor}</td>
-        <td class="text-muted small">${c.schedule}</td>
+        <td class="text-light small">${c.instructor}</td>
+        <td class="text-light small">${c.schedule}</td>
         <td><span class="badge bg-secondary">${c.capacity}</span></td>
       </tr>`).join('') + `</tbody></table>`;
   }
@@ -261,8 +261,8 @@ HOME_HTML = """
       <div class="col-md-4">
         <div class="section-card h-100" style="border-left: 4px solid ${p.color}">
           <h5 style="color:${p.color}"><i class="bi bi-trophy-fill me-2"></i>${p.code} Program</h5>
-          <p class="small text-muted mb-2"><strong style="color:#aaa">Workout:</strong><br>${p.workout.replace(/\|/g,'<br>')}</p>
-          <p class="small text-muted mb-0"><strong style="color:#aaa">Diet:</strong><br>${p.diet.replace(/\|/g,'<br>')}</p>
+          <p class="small text-light mb-2"><strong style="color:#ddd">Workout:</strong><br>${p.workout.replace(/\|/g,'<br>')}</p>
+          <p class="small text-light mb-0"><strong style="color:#ddd">Diet:</strong><br>${p.diet.replace(/\|/g,'<br>')}</p>
         </div>
       </div>`).join('');
   }
