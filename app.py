@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, abort, render_template_string
 
 app = Flask(__name__)
 
@@ -7,6 +7,238 @@ members = {}
 classes = {}
 _member_id_counter = 1
 _class_id_counter = 1
+
+
+# ---------- HOME UI ----------
+
+HOME_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ACEest Fitness & Gym</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    body { background: #0f0f0f; color: #f0f0f0; font-family: 'Segoe UI', sans-serif; }
+    .navbar { background: linear-gradient(90deg, #ff6a00, #ee0979); }
+    .navbar-brand { font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; }
+    .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; text-align: center; }
+    .stat-card .number { font-size: 3rem; font-weight: 800; color: #ff6a00; }
+    .stat-card .label { color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+    .section-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+    .section-card h5 { color: #ff6a00; font-weight: 700; margin-bottom: 16px; }
+    .form-control, .form-select { background: #111; border: 1px solid #333; color: #f0f0f0; }
+    .form-control:focus, .form-select:focus { background: #111; color: #f0f0f0; border-color: #ff6a00; box-shadow: 0 0 0 0.2rem rgba(255,106,0,0.25); }
+    .btn-primary { background: linear-gradient(90deg, #ff6a00, #ee0979); border: none; font-weight: 600; }
+    .btn-primary:hover { opacity: 0.85; background: linear-gradient(90deg, #ff6a00, #ee0979); }
+    .btn-danger { background: #c0392b; border: none; }
+    .table { color: #f0f0f0; }
+    .table thead th { color: #ff6a00; border-color: #2a2a2a; font-weight: 700; }
+    .table td, .table th { border-color: #2a2a2a; vertical-align: middle; }
+    .badge-basic { background: #2d6a4f; }
+    .badge-premium { background: #9b2226; }
+    .badge-vip { background: #7b2d8b; }
+    .status-dot { width: 10px; height: 10px; background: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .hero { background: linear-gradient(135deg, #1a1a1a, #0f0f0f); border-radius: 16px; padding: 48px 32px; text-align: center; margin-bottom: 32px; border: 1px solid #2a2a2a; }
+    .hero h1 { font-size: 2.8rem; font-weight: 900; background: linear-gradient(90deg, #ff6a00, #ee0979); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { color: #aaa; font-size: 1.1rem; }
+    .empty-state { color: #555; text-align: center; padding: 24px; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark px-4 py-3 mb-4">
+  <span class="navbar-brand"><i class="bi bi-lightning-charge-fill me-2"></i>ACEest Fitness & Gym</span>
+  <span class="text-white-50 small"><span class="status-dot"></span>System Online</span>
+</nav>
+
+<div class="container pb-5">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>Welcome to ACEest Gym</h1>
+    <p>Manage members, classes, and keep your gym running at peak performance.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-4 mb-4" id="stats">
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="number" id="memberCount">—</div>
+        <div class="label"><i class="bi bi-people-fill me-1"></i>Total Members</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="number" id="classCount">—</div>
+        <div class="label"><i class="bi bi-calendar-event-fill me-1"></i>Active Classes</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="number" style="color:#2ecc71; font-size:2rem;">HEALTHY</div>
+        <div class="label"><i class="bi bi-heart-pulse-fill me-1"></i>System Status</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- LEFT: Members -->
+    <div class="col-lg-6">
+
+      <!-- Add Member Form -->
+      <div class="section-card">
+        <h5><i class="bi bi-person-plus-fill me-2"></i>Register New Member</h5>
+        <div class="mb-3">
+          <input type="text" id="mName" class="form-control" placeholder="Full Name" />
+        </div>
+        <div class="mb-3">
+          <input type="email" id="mEmail" class="form-control" placeholder="Email Address" />
+        </div>
+        <div class="mb-3">
+          <select id="mType" class="form-select">
+            <option value="basic">Basic</option>
+            <option value="premium">Premium</option>
+            <option value="vip">VIP</option>
+          </select>
+        </div>
+        <button class="btn btn-primary w-100" onclick="addMember()">
+          <i class="bi bi-plus-circle me-1"></i>Add Member
+        </button>
+        <div id="mMsg" class="mt-2 small"></div>
+      </div>
+
+      <!-- Members List -->
+      <div class="section-card">
+        <h5><i class="bi bi-people-fill me-2"></i>Members</h5>
+        <div id="membersList"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Classes -->
+    <div class="col-lg-6">
+
+      <!-- Add Class Form -->
+      <div class="section-card">
+        <h5><i class="bi bi-calendar-plus-fill me-2"></i>Add New Class</h5>
+        <div class="mb-3">
+          <input type="text" id="cName" class="form-control" placeholder="Class Name (e.g. Yoga)" />
+        </div>
+        <div class="mb-3">
+          <input type="text" id="cInstructor" class="form-control" placeholder="Instructor Name" />
+        </div>
+        <div class="mb-3">
+          <input type="text" id="cSchedule" class="form-control" placeholder="Schedule (e.g. Mon 9am)" />
+        </div>
+        <div class="mb-3">
+          <input type="number" id="cCapacity" class="form-control" placeholder="Capacity (default 20)" />
+        </div>
+        <button class="btn btn-primary w-100" onclick="addClass()">
+          <i class="bi bi-plus-circle me-1"></i>Add Class
+        </button>
+        <div id="cMsg" class="mt-2 small"></div>
+      </div>
+
+      <!-- Classes List -->
+      <div class="section-card">
+        <h5><i class="bi bi-calendar-event-fill me-2"></i>Classes</h5>
+        <div id="classesList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const badgeClass = t => t === 'premium' ? 'badge-premium' : t === 'vip' ? 'badge-vip' : 'badge-basic';
+
+  async function loadMembers() {
+    const res = await fetch('/members');
+    const data = await res.json();
+    document.getElementById('memberCount').textContent = data.length;
+    const el = document.getElementById('membersList');
+    if (!data.length) { el.innerHTML = '<div class="empty-state"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No members yet</div>'; return; }
+    el.innerHTML = `<table class="table table-sm"><thead><tr><th>Name</th><th>Email</th><th>Type</th><th></th></tr></thead><tbody>` +
+      data.map(m => `<tr>
+        <td><i class="bi bi-person-circle me-1 text-warning"></i>${m.name}</td>
+        <td class="text-muted small">${m.email}</td>
+        <td><span class="badge ${badgeClass(m.membership_type)}">${m.membership_type}</span></td>
+        <td><button class="btn btn-danger btn-sm py-0" onclick="deleteMember(${m.id})"><i class="bi bi-trash"></i></button></td>
+      </tr>`).join('') + `</tbody></table>`;
+  }
+
+  async function loadClasses() {
+    const res = await fetch('/classes');
+    const data = await res.json();
+    document.getElementById('classCount').textContent = data.length;
+    const el = document.getElementById('classesList');
+    if (!data.length) { el.innerHTML = '<div class="empty-state"><i class="bi bi-inbox fs-3 d-block mb-2"></i>No classes yet</div>'; return; }
+    el.innerHTML = `<table class="table table-sm"><thead><tr><th>Class</th><th>Instructor</th><th>Schedule</th><th>Cap</th></tr></thead><tbody>` +
+      data.map(c => `<tr>
+        <td><i class="bi bi-activity me-1 text-danger"></i>${c.name}</td>
+        <td class="text-muted small">${c.instructor}</td>
+        <td class="text-muted small">${c.schedule}</td>
+        <td><span class="badge bg-secondary">${c.capacity}</span></td>
+      </tr>`).join('') + `</tbody></table>`;
+  }
+
+  async function addMember() {
+    const name = document.getElementById('mName').value.trim();
+    const email = document.getElementById('mEmail').value.trim();
+    const membership_type = document.getElementById('mType').value;
+    const msg = document.getElementById('mMsg');
+    if (!name || !email) { msg.innerHTML = '<span class="text-danger">Name and email are required.</span>'; return; }
+    const res = await fetch('/members', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name, email, membership_type}) });
+    if (res.ok) {
+      msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Member added!</span>';
+      document.getElementById('mName').value = '';
+      document.getElementById('mEmail').value = '';
+      loadMembers();
+    } else {
+      msg.innerHTML = '<span class="text-danger">Failed to add member.</span>';
+    }
+  }
+
+  async function deleteMember(id) {
+    await fetch('/members/' + id, { method: 'DELETE' });
+    loadMembers();
+  }
+
+  async function addClass() {
+    const name = document.getElementById('cName').value.trim();
+    const instructor = document.getElementById('cInstructor').value.trim();
+    const schedule = document.getElementById('cSchedule').value.trim() || 'TBD';
+    const capacity = parseInt(document.getElementById('cCapacity').value) || 20;
+    const msg = document.getElementById('cMsg');
+    if (!name || !instructor) { msg.innerHTML = '<span class="text-danger">Name and instructor are required.</span>'; return; }
+    const res = await fetch('/classes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name, instructor, schedule, capacity}) });
+    if (res.ok) {
+      msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Class added!</span>';
+      document.getElementById('cName').value = '';
+      document.getElementById('cInstructor').value = '';
+      document.getElementById('cSchedule').value = '';
+      document.getElementById('cCapacity').value = '';
+      loadClasses();
+    } else {
+      msg.innerHTML = '<span class="text-danger">Failed to add class.</span>';
+    }
+  }
+
+  loadMembers();
+  loadClasses();
+</script>
+</body>
+</html>
+"""
+
+
+@app.route("/", methods=["GET"])
+def home():
+    return render_template_string(HOME_HTML)
 
 
 # ---------- MEMBERS ----------
