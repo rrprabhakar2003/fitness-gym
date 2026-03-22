@@ -1,0 +1,13 @@
+# Test image: extends the runtime image and adds test dependencies + test files
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application and test files
+COPY app.py .
+COPY test_app.py .
+
+CMD ["pytest", "test_app.py", "-v"]
