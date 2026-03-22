@@ -53,6 +53,8 @@ HOME_HTML = """
     .section-card h5 { color: #ff6a00; font-weight: 700; margin-bottom: 16px; }
     .form-control, .form-select { background: #111; border: 1px solid #333; color: #f0f0f0; }
     .form-control:focus, .form-select:focus { background: #111; color: #f0f0f0; border-color: #ff6a00; box-shadow: 0 0 0 0.2rem rgba(255,106,0,0.25); }
+    .form-control::placeholder { color: #888; opacity: 1; }
+    .form-select option { background: #1a1a1a; color: #f0f0f0; }
     .btn-primary { background: linear-gradient(90deg, #ff6a00, #ee0979); border: none; font-weight: 600; }
     .btn-primary:hover { opacity: 0.85; background: linear-gradient(90deg, #ff6a00, #ee0979); }
     .btn-danger { background: #c0392b; border: none; }
